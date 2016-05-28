@@ -80,18 +80,18 @@ int gen_d_srcB()
         (if_id_curr->icode) == (I_IADDL)) ? (if_id_curr->rb) : (
         (if_id_curr->icode) == (I_PUSHL) || (if_id_curr->icode) == (I_POPL)
          || (if_id_curr->icode) == (I_CALL) || (if_id_curr->icode) == 
-        (I_RET) || (if_id_curr->icode) == (I_LEAVE)) ? (REG_ESP) : 
-      (REG_NONE));
+        (I_RET)) ? (REG_ESP) : ((if_id_curr->icode) == (I_LEAVE)) ? 
+      (REG_EBP) : (REG_NONE));
 }
 
 int gen_d_dstE()
 {
     return (((if_id_curr->icode) == (I_RRMOVL) || (if_id_curr->icode) == 
-        (I_IRMOVL) || (if_id_curr->icode) == (I_ALU)) ? (if_id_curr->rb) : 
-      ((if_id_curr->icode) == (I_PUSHL) || (if_id_curr->icode) == (I_POPL)
-         || (if_id_curr->icode) == (I_CALL) || (if_id_curr->icode) == 
-        (I_RET) || (if_id_curr->icode) == (I_LEAVE)) ? (REG_ESP) : 
-      (REG_NONE));
+        (I_IRMOVL) || (if_id_curr->icode) == (I_ALU) || (if_id_curr->icode)
+         == (I_IADDL)) ? (if_id_curr->rb) : ((if_id_curr->icode) == 
+        (I_PUSHL) || (if_id_curr->icode) == (I_POPL) || (if_id_curr->icode)
+         == (I_CALL) || (if_id_curr->icode) == (I_RET) || 
+        (if_id_curr->icode) == (I_LEAVE)) ? (REG_ESP) : (REG_NONE));
 }
 
 int gen_d_dstM()
@@ -126,13 +126,13 @@ int gen_d_valB()
 int gen_aluA()
 {
     return (((id_ex_curr->icode) == (I_RRMOVL) || (id_ex_curr->icode) == 
-        (I_ALU) || (id_ex_curr->icode) == (I_LEAVE)) ? (id_ex_curr->vala)
-       : ((id_ex_curr->icode) == (I_IRMOVL) || (id_ex_curr->icode) == 
-        (I_RMMOVL) || (id_ex_curr->icode) == (I_MRMOVL) || 
-        (id_ex_curr->icode) == (I_IADDL)) ? (id_ex_curr->valc) : (
-        (id_ex_curr->icode) == (I_CALL) || (id_ex_curr->icode) == (I_PUSHL)
-        ) ? -4 : ((id_ex_curr->icode) == (I_RET) || (id_ex_curr->icode) == 
-        (I_POPL)) ? 4 : 0);
+        (I_ALU)) ? (id_ex_curr->vala) : ((id_ex_curr->icode) == (I_IRMOVL)
+         || (id_ex_curr->icode) == (I_RMMOVL) || (id_ex_curr->icode) == 
+        (I_MRMOVL) || (id_ex_curr->icode) == (I_IADDL)) ? 
+      (id_ex_curr->valc) : ((id_ex_curr->icode) == (I_CALL) || 
+        (id_ex_curr->icode) == (I_PUSHL)) ? -4 : ((id_ex_curr->icode) == 
+        (I_RET) || (id_ex_curr->icode) == (I_POPL)) ? 4 : (
+        (id_ex_curr->icode) == (I_LEAVE)) ? (id_ex_curr->vala) : 0);
 }
 
 int gen_aluB()
