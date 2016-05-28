@@ -43,6 +43,8 @@ intsig IIADDL	'I_IADDL'
 # Instruction code for leave instruction
 intsig ILEAVE	'I_LEAVE'
 
+intsig ITEST	'ITEST'
+
 ##### Symbolic represenations of Y86 function codes            #####
 intsig FNONE    'F_NONE'        # Default function code
 
@@ -161,7 +163,7 @@ int f_ifun = [
 # Is instruction valid?
 bool instr_valid = f_icode in 
 	{ INOP, IHALT, IRRMOVL, IIRMOVL, IRMMOVL, IMRMOVL,
-	  IOPL, IJXX, ICALL, IRET, IPUSHL, IPOPL , IIADDL , ILEAVE};
+	  IOPL, IJXX, ICALL, IRET, IPUSHL, IPOPL , IIADDL , ILEAVE, ITEST};
 
 # Determine status code for fetched instruction
 int f_stat = [
@@ -174,11 +176,11 @@ int f_stat = [
 # Does fetched instruction require a regid byte?
 bool need_regids =
 	f_icode in { IRRMOVL, IOPL, IPUSHL, IPOPL, 
-		     IIRMOVL, IRMMOVL, IMRMOVL , IIADDL};
+		     IIRMOVL, IRMMOVL, IMRMOVL , IIADDL, ITEST};
 
 # Does fetched instruction require a constant word?
 bool need_valC =
-	f_icode in { IIRMOVL, IRMMOVL, IMRMOVL, IJXX, ICALL , IIADDL};
+	f_icode in { IIRMOVL, IRMMOVL, IMRMOVL, IJXX, ICALL , IIADDL, ITEST};
 
 # Predict next value of PC
 int f_predPC = [
@@ -199,7 +201,7 @@ int d_srcA = [
 
 ## What register should be used as the B source?
 int d_srcB = [
-	D_icode in { IOPL, IRMMOVL, IMRMOVL, IIADDL } : D_rB;
+	D_icode in { IOPL, IRMMOVL, IMRMOVL, IIADDL , ITEST } : D_rB;
 	D_icode in { IPUSHL, IPOPL, ICALL, IRET, ILEAVE } : RESP;
 	1 : RNONE;  # Don't need register
 ];
@@ -244,7 +246,7 @@ int d_valB = [
 ## Select input A to ALU
 int aluA = [
 	E_icode in { IRRMOVL, IOPL, ILEAVE} : E_valA;
-	E_icode in { IIRMOVL, IRMMOVL, IMRMOVL, IIADDL } : E_valC;
+	E_icode in { IIRMOVL, IRMMOVL, IMRMOVL, IIADDL , ITEST} : E_valC;
 	E_icode in { ICALL, IPUSHL } : -4;
 	E_icode in { IRET, IPOPL } : 4;
 	# Other instructions don't need ALU
@@ -253,7 +255,7 @@ int aluA = [
 ## Select input B to ALU
 int aluB = [
 	E_icode in { IRMMOVL, IMRMOVL, IOPL, ICALL, 
-		     IPUSHL, IRET, IPOPL, IIADDL} : E_valB;
+		     IPUSHL, IRET, IPOPL, IIADDL , ITEST} : E_valB;
 	E_icode in { IRRMOVL, IIRMOVL } : 0;
 	E_icode in { ILEAVE } : 4;
 	# Other instructions don't need ALU
@@ -283,16 +285,16 @@ int e_dstE = [
 
 ## Select memory address
 int mem_addr = [
-	M_icode in { IRMMOVL, IPUSHL, ICALL, IMRMOVL } : M_valE;
+	M_icode in { IRMMOVL, IPUSHL, ICALL, IMRMOVL , ITEST} : M_valE;
 	M_icode in { IPOPL, IRET, ILEAVE } : M_valA;
 	# Other instructions don't need address
 ];
 
 ## Set read control signal
-bool mem_read = M_icode in { IMRMOVL, IPOPL, IRET };
+bool mem_read = M_icode in { IMRMOVL, IPOPL, IRET, ILEAVE };
 
 ## Set write control signal
-bool mem_write = M_icode in { IRMMOVL, IPUSHL, ICALL, ILEAVE };
+bool mem_write = M_icode in { IRMMOVL, IPUSHL, ICALL };
 
 #/* $begin pipe-m_stat-hcl */
 ## Update the status
@@ -327,7 +329,7 @@ int Stat = [
 bool F_bubble = 0;
 bool F_stall =
 	# Conditions for a load/use hazard
-	E_icode in { IMRMOVL, IPOPL, ILEAVE } &&
+	E_icode in { IMRMOVL, IPOPL, ILEAVE , ITEST} &&
 	 E_dstM in { d_srcA, d_srcB } ||
 	# Stalling at fetch while ret passes through pipeline
 	IRET in { D_icode, E_icode, M_icode };
@@ -336,7 +338,7 @@ bool F_stall =
 # At most one of these can be true.
 bool D_stall = 
 	# Conditions for a load/use hazard
-	E_icode in { IMRMOVL, IPOPL, ILEAVE } &&
+	E_icode in { IMRMOVL, IPOPL, ILEAVE , ITEST} &&
 	 E_dstM in { d_srcA, d_srcB };
 
 bool D_bubble =
@@ -344,7 +346,7 @@ bool D_bubble =
 	(E_icode == IJXX && !e_Cnd) ||
 	# Stalling at fetch while ret passes through pipeline
 	# but not condition for a load/use hazard
-	!(E_icode in { IMRMOVL, IPOPL, ILEAVE } && E_dstM in { d_srcA, d_srcB }) &&
+	!(E_icode in { IMRMOVL, IPOPL, ILEAVE , ITEST} && E_dstM in { d_srcA, d_srcB }) &&
 	  IRET in { D_icode, E_icode, M_icode };
 
 # Should I stall or inject a bubble into Pipeline Register E?
@@ -354,7 +356,7 @@ bool E_bubble =
 	# Mispredicted branch
 	(E_icode == IJXX && !e_Cnd) ||
 	# Conditions for a load/use hazard
-	E_icode in { IMRMOVL, IPOPL, ILEAVE} &&
+	E_icode in { IMRMOVL, IPOPL, ILEAVE ,ITEST} &&
 	 E_dstM in { d_srcA, d_srcB};
 
 # Should I stall or inject a bubble into Pipeline Register M?

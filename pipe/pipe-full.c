@@ -185,14 +185,14 @@ int gen_mem_addr()
 int gen_mem_read()
 {
     return ((ex_mem_curr->icode) == (I_MRMOVL) || (ex_mem_curr->icode) == 
-      (I_POPL) || (ex_mem_curr->icode) == (I_RET));
+      (I_POPL) || (ex_mem_curr->icode) == (I_RET) || (ex_mem_curr->icode)
+       == (I_LEAVE));
 }
 
 int gen_mem_write()
 {
     return ((ex_mem_curr->icode) == (I_RMMOVL) || (ex_mem_curr->icode) == 
-      (I_PUSHL) || (ex_mem_curr->icode) == (I_CALL) || (ex_mem_curr->icode)
-       == (I_LEAVE));
+      (I_PUSHL) || (ex_mem_curr->icode) == (I_CALL));
 }
 
 int gen_m_stat()
