@@ -27,19 +27,19 @@ typedef
 
 // Operations on memeory
 
-void write_mem(cache *c,int p,int v)
+void write_mem(cache c,int p,int v)
 {
 	c->mem[p]=v;
 }
 
-int read_mem(cache *c,int p)
+int read_mem(cache c,int p)
 {
 	return c->mem[p];
 }
 
 // Operations on queue
 
-int find_in_queue(cache *c,int p)
+int find_in_queue(cache c,int p)
 {
 	int a=0;
 	for (a=0;a<c->size;a++)
@@ -51,7 +51,7 @@ int find_in_queue(cache *c,int p)
 	return MESI_I;
 }
 
-int new_ele_in_queue(cache *c,int p,int v)
+int new_ele_in_queue(cache c,int p,int v)
 {
 	int a=0;
 	if (c->size<c->maxsize)
@@ -85,49 +85,49 @@ int new_ele_in_queue(cache *c,int p,int v)
 //2 3 quest type
 //4 5 pos information
 
-int check_quest_bit(cache *c)
+int check_quest_bit(cache c)
 {
 	return c->bus[0+c->id];
 }
 
-int check_type_bit(cache *c)
+int check_type_bit(cache c)
 {
 	return c->bus[2+c->id];
 }
 
-int check_pos_bit(cache *c)
+int check_pos_bit(cache c)
 {
 	return c->bus[4+c->id];
 }
 
-void done_quest(cache *c)
+void done_quest(cache c)
 {
 	c->bus[0+c->id]=0;
 }
 
-void start_quest(cache *c)
+void start_quest(cache c)
 {
 	c->bus[1-c->id]=1;
 }
 
-int check_op_quest_bit(cache *c)
+int check_op_quest_bit(cache c)
 {
 	return c->bus[1-c->id];
 }
 
-void write_type(cache *c,int v)
+void write_type(cache c,int v)
 {
 	c->bus[3-c->id]=v;
 }
 
-void write_pos(cache *c,int v)
+void write_pos(cache c,int v)
 {
 	c->bus[5-c->id]=v;
 }
 
 // Operations on bus
 
-void clear_bus(cache *c)
+void clear_bus(cache c)
 {
 	int type=check_type_bit(c);
 	case (type)
@@ -169,7 +169,7 @@ void clear_bus(cache *c)
 	}
 }
 
-void write_ele(cache *c,int p)
+void write_ele(cache c,int p)
 {
 	while (check_quest_bit(c))
 		clear_bus(c);
@@ -182,7 +182,7 @@ void write_ele(cache *c,int p)
 	}
 }
 
-void read_ele(cache *c,int p)
+void read_ele(cache c,int p)
 {
 	while (check_quest_bit(c))
 		clear_bus(c);
@@ -197,7 +197,7 @@ void read_ele(cache *c,int p)
 
 // Operations on cache
 
-void write_cache(cache *c,int p,int v)
+void write_cache(cache c,int p,int v)
 {
 	int pos=find_in_queue(c,p);
 	if (pos==MESI_I) 
@@ -228,7 +228,7 @@ void write_cache(cache *c,int p,int v)
 	}
 }
 
-int read_cache(cache *c,int p)
+int read_cache(cache c,int p)
 {
 	int pos=find_in_queue(c,p);
 	int res;
