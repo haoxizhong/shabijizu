@@ -25,7 +25,7 @@ typedef enum { R_ARG, M_ARG, I_ARG, NO_ARG } arg_t;
 /* Different instruction types */
 typedef enum { I_HALT, I_NOP, I_RRMOVL, I_IRMOVL, I_RMMOVL, I_MRMOVL,
 	       I_ALU, I_JMP, I_CALL, I_RET, I_PUSHL, I_POPL,
-	       I_IADDL, I_LEAVE, I_POP2 } itype_t;
+	       I_IADDL, I_LEAVE, I_POP2 , I_TOM} itype_t;
 
 /* Different ALU operations */
 typedef enum { A_ADD, A_SUB, A_AND, A_XOR, A_NONE } alu_t;
@@ -85,10 +85,12 @@ typedef struct {
   int len;
   word_t maxaddr;
   byte_t *contents;
+  int *msg;
 } mem_rec, *mem_t;
 
 /* Create a memory with len bytes */
 mem_t init_mem(int len);
+mem_t init_mem_with_id(int len,int id);
 void free_mem(mem_t m);
 
 /* Set contents of memory to 0 */
@@ -109,7 +111,7 @@ bool_t diff_mem(mem_t oldm, mem_t newm, FILE *outfile);
 /*** In the following functions, a return value of 1 means success ***/
 
 /* Load memory from .yo file.  Return number of bytes read */
-int load_mem(mem_t m, FILE *infile, int report_error);
+int load_mem(mem_t m, FILE *infile, int report_error,int firstp);
 
 /* Get byte from memory */
 bool_t get_byte_val(mem_t m, word_t pos, byte_t *dest);

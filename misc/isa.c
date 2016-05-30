@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "isa.h"
+#include "../cache/cache.h"
 
 
 /* Are we running in GUI mode? */
@@ -93,6 +94,7 @@ instr_t instruction_set[] =
 	{"popl",   HPACK(I_POPL, F_NONE) ,  2, R_ARG, 1, 1, NO_ARG, 0, 0 },
 	{"iaddl",  HPACK(I_IADDL, F_NONE), 6, I_ARG, 2, 4, R_ARG, 1, 0 },
 	{"leave",  HPACK(I_LEAVE, F_NONE), 1, NO_ARG, 0, 0, NO_ARG, 0, 0 },
+	{"itom", HPACK(I_TOM,F_NONE),6,M_ARG,1,0,R_ARG,1,1},
 	/* this is just a hack to make the I_POP2 code have an associated name */
 	{"pop2",   HPACK(I_POP2, F_NONE) , 0, NO_ARG, 0, 0, NO_ARG, 0, 0 },
 
@@ -131,14 +133,28 @@ instr_ptr bad_instr()
 	return &invalid_instr;
 }
 
-
 mem_t init_mem(int len)
 {
 
 	mem_t result = (mem_t) malloc(sizeof(mem_rec));
 	len = ((len+BPL-1)/BPL)*BPL;
 	result->len = len;
+	result->msg=NULL;
 	result->contents = (byte_t *) calloc(len, 1);
+	return result;
+}
+
+mem_t init_mem_with_id(int len,int id)
+{
+
+	mem_t result = (mem_t) malloc(sizeof(mem_rec));
+	len = ((len+BPL-1)/BPL)*BPL;
+	result->len = len;
+	result->contents = (byte_t *) calloc(len, 1);
+
+	if (id<0 || id>1) result->msg=NULL;
+	else result->msg=shmat(shmget(MSGSTART(id),MSGSIZE,0),0,0);
+
 	return result;
 }
 
@@ -191,7 +207,7 @@ int hex2dig(char c)
 }
 
 #define LINELEN 4096
-int load_mem(mem_t m, FILE *infile, int report_error)
+int load_mem(mem_t m, FILE *infile, int report_error,int firstp)
 {
 	/* Read contents of .yo file */
 	char buf[LINELEN];
@@ -265,7 +281,8 @@ int load_mem(mem_t m, FILE *infile, int report_error)
 				return 0;
 			}
 			byte = hex2dig(ch)*16+hex2dig(cl);
-			m->contents[bytepos++] = byte;
+			if (m->msg==NULL) m->contents[bytepos++] = byte;
+			else msg_write(m->msg,bytepos++,byte);
 			byte_cnt++;
 			empty_line = 0;
 			hexcode[index++] = ch;
@@ -300,7 +317,8 @@ bool_t get_byte_val(mem_t m, word_t pos, byte_t *dest)
 {
 	if (pos < 0 || pos >= m->len)
 		return FALSE;
-	*dest = m->contents[pos];
+	if (m->msg!=NULL) *dest = msg_read(m->msg,pos);
+	else *dest=m->contents[pos];
 	return TRUE;
 }
 
@@ -312,7 +330,8 @@ bool_t get_word_val(mem_t m, word_t pos, word_t *dest)
 		return FALSE;
 	val = 0;
 	for (i = 0; i < 4; i++)
-		val = val | m->contents[pos+i]<<(8*i);
+		if (m->msg!=NULL) val = val | msg_read(m->msg,pos+i)<<(8*i);
+		else val=val | m->contents[pos+i]<<(8*i);
 	*dest = val;
 	return TRUE;
 }
@@ -321,7 +340,8 @@ bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
 {
 	if (pos < 0 || pos >= m->len)
 		return FALSE;
-	m->contents[pos] = val;
+	if (m->msg!=NULL) msg_write(m->msg,pos,val);
+	else m->contents[pos]=val;
 	return TRUE;
 }
 
@@ -331,7 +351,8 @@ bool_t set_word_val(mem_t m, word_t pos, word_t val)
 	if (pos < 0 || pos + 4 > m->len)
 		return FALSE;
 	for (i = 0; i < 4; i++) {
-		m->contents[pos+i] = val & 0xFF;
+		if (m->msg!=NULL) msg_write(m->msg,pos+i,val & 0xFF);
+		else m->contents[pos+i]=val&0xFF;
 		val >>= 8;
 	}
 	return TRUE;

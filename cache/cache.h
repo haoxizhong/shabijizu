@@ -6,24 +6,24 @@
 #include<string.h>
 #include "public.h"
 
-typedef
+typedef struct
 {
-	int size,id;
-	volatile int *pos;
-	volatile int *val;
-	volatile int *bus;
-	volatile int *mem;
-	volatile int *msg;
-	volatile int *type;
-	volatile int *hit;
-}*cache;
+	int size,id,maxsize;
+	int *pos;
+	int *val;
+	int *bus;
+	int *mem;
+	int *msg;
+	int *type;
+	int *hit;
+}*cache,no_pointer_cache;
 
 // Definition
 
-#define MESI_M 0
-#define MESI_E 1
-#define MESI_S 2
-#define MESI_I 3
+#define MESI_M -1
+#define MESI_E -2
+#define MESI_S -3
+#define MESI_I -4
 
 // Operations on memeory
 
@@ -43,7 +43,7 @@ int find_in_queue(cache c,int p)
 {
 	int a=0;
 	for (a=0;a<c->size;a++)
-		if (ic->pos[a]==p && c->type!=MESI_I) 
+		if (c->pos[a]==p && c->type[a]!=MESI_I) 
 		{
 			c->hit[a]++;
 			return a;
@@ -67,16 +67,17 @@ int new_ele_in_queue(cache c,int p,int v)
 		{
 			c->pos[a]=p;
 			c->val[a]=v;
-			c->hit[a]++;
+			c->hit[a]=1;
 			return a;
 		}
 	int res=0;
 	for (a=1;a<c->size;a++)
 		if (c->hit[a]<c->hit[res]) res=a;
+	write_mem(c,c->pos[res],c->val[res]);
 	c->pos[res]=p;
 	c->val[res]=v;
 	c->hit[res]=1;
-	return;
+	return res;
 }
 
 // Query on bus
@@ -102,6 +103,7 @@ int check_pos_bit(cache c)
 
 void done_quest(cache c)
 {
+	c->bus[4+c->id]=-1;
 	c->bus[0+c->id]=0;
 }
 
@@ -130,11 +132,14 @@ void write_pos(cache c,int v)
 void clear_bus(cache c)
 {
 	int type=check_type_bit(c);
-	case (type)
+	//printf("%d\n",type);
+	switch (type)
 	{
 		case 1:// The other one wants to read
 			{
-				int p=check_pos_bit(c);
+				int p=-1;
+				while (p==-1)
+					p=check_pos_bit(c);
 				int pos=find_in_queue(c,p);
 				if (pos!=MESI_I)
 				{
@@ -153,12 +158,14 @@ void clear_bus(cache c)
 			break;
 		case 2:// The other one wants to write
 			{
-				int p=check_pos_bit(c);
+				int p=-1;
+				while (p==-1)
+					p=check_pos_bit(c);
 				int pos=find_in_queue(c,p);
 				if (pos!=MESI_I)
 				{
 					int v=c->val[pos];
-					wrtie_mem(c,p,v);
+					write_mem(c,p,v);
 					c->type[pos]=MESI_I;
 				}
 				done_quest(c);
@@ -178,7 +185,7 @@ void write_ele(cache c,int p)
 	write_pos(c,p);
 	while (check_op_quest_bit(c))
 	{
-		if (check_op_quest_bit(c)) clear_bus(c);
+		if (check_quest_bit(c)) clear_bus(c);
 	}
 }
 
@@ -200,6 +207,15 @@ void read_ele(cache c,int p)
 void write_cache(cache c,int p,int v)
 {
 	int pos=find_in_queue(c,p);
+	/*if (p==87)
+	{
+		printf("Write\n");
+		printf("%d %d %d\n",p,v,pos);
+		if (pos!=MESI_I)
+		{
+			printf("%d %d %d %d\n",c->pos[pos],c->val[pos],c->type[pos],c->hit[pos]);
+		}
+	}*/
 	if (pos==MESI_I) 
 	{
 		write_ele(c,p);
@@ -231,6 +247,15 @@ void write_cache(cache c,int p,int v)
 int read_cache(cache c,int p)
 {
 	int pos=find_in_queue(c,p);
+	/*if (p==87)
+	{
+		printf("Read\n");
+		printf("%d %d\n",p,pos);
+		if (pos!=MESI_I)
+		{
+			printf("%d %d %d %d\n",c->pos[pos],c->val[pos],c->type[pos],c->hit[pos]);
+		}
+	}*/
 	int res;
 	if (pos!=MESI_I) res=c->val[pos];
 	else
@@ -241,6 +266,39 @@ int read_cache(cache c,int p)
 		c->type[pos]=MESI_S;
 	}
 	return res;
+}
+
+cache new_cache(int id)
+{
+	cache res=(cache)malloc(sizeof(no_pointer_cache));
+	res->size=0;
+	res->maxsize=CACHESIZE;
+	res->pos=(int*)calloc(res->maxsize,sizeof(int));
+	res->val=(int*)calloc(res->maxsize,sizeof(int));
+	res->type=(int*)calloc(res->maxsize,sizeof(int));
+	res->hit=(int*)calloc(res->maxsize,sizeof(int));
+	res->bus=shmat(shmget(BUSSTART,0,0),0,0);
+	res->mem=shmat(shmget(MEMSTART,0,0),0,0);
+	res->id=id;
+	return res;
+}
+
+// Test on cache
+
+void msg_write(int *msg,int p,int v)
+{
+	msg[0]=2;
+	msg[1]=p;
+	msg[2]=v;
+	while (msg[0]);
+}
+
+int msg_read(int *msg,int p)
+{
+	msg[0]=1;
+	msg[1]=p;
+	while (msg[0]);
+	return msg[2];
 }
 
 #endif

@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 	exit(1);
     }
 
-    if (!load_mem(s->m, code_file, 1)) {
+    if (!load_mem(s->m, code_file, 1, 0)) {
 	printf("Exiting\n");
 	return 1;
     }
