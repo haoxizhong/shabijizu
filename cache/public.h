@@ -4,10 +4,10 @@
 
 #define CACHESIZE 32
 #define BUSSIZE 32
-#define MEMSIZE 1024
+#define MEMSIZE 3000
 #define MSGSIZE 32
 
 #define CACHESTART(x) (ftok("Makefile",x))
-#define BUSSTART (ftok("Makefile",45))
-#define MEMSTART (ftok("Makefile",50))
-#define MSGSTART(x) (ftok("Makefile",x+10))
+#define BUSSTART (ftok("Makefile",12))
+#define MEMSTART (ftok("Makefile",18))
+#define MSGSTART(x) (ftok("Makefile",x+6))

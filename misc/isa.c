@@ -135,7 +135,6 @@ instr_ptr bad_instr()
 
 mem_t init_mem(int len)
 {
-
 	mem_t result = (mem_t) malloc(sizeof(mem_rec));
 	len = ((len+BPL-1)/BPL)*BPL;
 	result->len = len;
@@ -149,6 +148,7 @@ mem_t init_mem_with_id(int len,int id)
 
 	mem_t result = (mem_t) malloc(sizeof(mem_rec));
 	len = ((len+BPL-1)/BPL)*BPL;
+	//printf("Ano SB %d\n",id);
 	result->len = len;
 	result->contents = (byte_t *) calloc(len, 1);
 
@@ -163,9 +163,15 @@ void clear_mem(mem_t m)
 	memset(m->contents, 0, m->len);
 }
 
+void clear_reg(mem_t m)
+{
+	clear_mem(m);
+}
+
 void free_mem(mem_t m)
 {
 	free((void *) m->contents);
+	free((void *) m->msg);
 	free((void *) m);
 }
 
@@ -246,6 +252,7 @@ int load_mem(mem_t m, FILE *infile, int report_error,int firstp)
 			cpos++;
 			bytepos = bytepos*16 + hex2dig(c);
 		}
+		bytepos+=firstp;
 
 		while (isspace((int)buf[cpos]))
 			cpos++;
@@ -305,7 +312,7 @@ int load_mem(mem_t m, FILE *infile, int report_error,int firstp)
 				line[index++] = c;
 			}
 			line[index] = '\0';
-			if (!empty_line)
+			f (!empty_line)
 				report_line(line_no++, addr, hexcode, line);
 		}
 #endif /* HAS_GUI */ 
@@ -315,6 +322,8 @@ int load_mem(mem_t m, FILE *infile, int report_error,int firstp)
 
 bool_t get_byte_val(mem_t m, word_t pos, byte_t *dest)
 {
+//	if (m->msg==NULL) printf("-1\n");
+//	else printf("orz\n");
 	if (pos < 0 || pos >= m->len)
 		return FALSE;
 	if (m->msg!=NULL) *dest = msg_read(m->msg,pos);
@@ -324,6 +333,8 @@ bool_t get_byte_val(mem_t m, word_t pos, byte_t *dest)
 
 bool_t get_word_val(mem_t m, word_t pos, word_t *dest)
 {
+	//if (m->msg==NULL) printf("-1\n");
+//	else printf("orz\n");
 	int i;
 	word_t val;
 	if (pos < 0 || pos + 4 > m->len)
@@ -338,6 +349,8 @@ bool_t get_word_val(mem_t m, word_t pos, word_t *dest)
 
 bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
 {
+//	if (m->msg==NULL) printf("-1\n");
+//	else printf("orz\n");
 	if (pos < 0 || pos >= m->len)
 		return FALSE;
 	if (m->msg!=NULL) msg_write(m->msg,pos,val);
@@ -347,6 +360,8 @@ bool_t set_byte_val(mem_t m, word_t pos, byte_t val)
 
 bool_t set_word_val(mem_t m, word_t pos, word_t val)
 {
+//	if (m->msg==NULL) printf("-1\n");
+//	else printf("orz\n");
 	int i;
 	if (pos < 0 || pos + 4 > m->len)
 		return FALSE;
@@ -356,6 +371,16 @@ bool_t set_word_val(mem_t m, word_t pos, word_t val)
 		val >>= 8;
 	}
 	return TRUE;
+}
+
+int atom_memory(mem_t m,word_t pos)
+{
+	if (m->msg==NULL)
+	{
+		printf("SBSBSB\n");
+		exit(1);
+	}
+	return msg_atom(m->msg,pos);
 }
 
 void dump_memory(FILE *outfile, mem_t m, word_t pos, int len)
@@ -383,7 +408,18 @@ void dump_memory(FILE *outfile, mem_t m, word_t pos, int len)
 
 mem_t init_reg()
 {
-	return init_mem(32);
+	int len = 32;
+	mem_t result = (mem_t) malloc(sizeof(mem_rec));
+	len = ((len+BPL-1)/BPL)*BPL;
+	result->len = len;
+	result->contents = (byte_t *) calloc(len, 1);
+	result->msg = NULL;
+	return result;
+}
+
+mem_t init_reg_with_id(int id)
+{
+	return init_mem(id);
 }
 
 void free_reg(mem_t r)

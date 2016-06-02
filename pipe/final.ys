@@ -1,0 +1,158 @@
+.pos 0
+irmovl 0x00000640,%eax
+irmovl 0,%ebx
+irmovl 10,%ecx
+irmovl 0,%edx
+itom 0x00000008(%eax),%ebx
+addl %ebx,%ebx
+je ZERO
+jmp ONE
+
+ZERO:
+	jmp ZEROWAIT
+
+	ZEROWAIT:
+		mrmovl 0x00000009(%eax),%edi
+		irmovl 0,%ebx
+		subl %edi,%ebx
+		je ZEROSEND
+		irmovl 1,%ebx
+		subl %edi,%ebx
+		je ZEROWAIT
+		irmovl 2,%ebx
+		subl %edi,%ebx
+		je ZEROWAIT
+		irmovl 3,%ebx
+		subl %edi,%ebx
+		je ZERORECEIVE
+		jmp GG
+
+	ZERORECEIVE:
+		itom 0x00000005(%eax),%ebx
+		mrmovl 0x0000000d(%eax),%edx
+		rrmovl %eax,%esi
+		iaddl 13,%esi
+		jmp ZERORECEIVING
+
+		ZERORECEIVING:
+			iaddl 4,%esi
+			mrmovl 0x00000000(%esi),%edi
+			rmmovl %edi,0x00000000(%eax)
+			itom 0x00000000(%eax),%ebx
+			iaddl -1,%edx
+			irmovl 0,%ebx
+			subl %edx,%ebx
+			je ZERORECEIVEEND
+			jmp ZERORECEIVING
+
+		ZERORECEIVEEND:
+			itom 0x00000006(%eax),%ebx
+			irmovl 0,%edi
+			rmmovl %edi,0x00000009(%eax)
+			jmp ZEROWAIT
+
+	ZEROSEND:
+		irmovl 0,%ebx
+		subl %ecx,%ebx
+		je ZEROEND
+		itom 0x00000004(%eax),%ebx
+		rrmovl %ecx,%edx
+		rmmovl %ecx,0x0000000d(%eax)
+		rrmovl %eax,%esi
+		iaddl 13,%esi
+		iaddl -1,%ecx
+		jmp ZEROSENDING
+
+		ZEROSENDING:
+			iaddl 4,%esi
+			rmmovl %edx,0x00000000(%esi)
+			rmmovl %edx,0x00000000(%eax)
+			itom 0x00000000(%eax),%ebx
+			iaddl -1,%edx
+			irmovl 0,%ebx
+			subl %edx,%ebx
+			je ZEROSENDEND
+			jmp ZEROSENDING
+
+		ZEROSENDEND:
+			itom 0x00000006(%eax),%ebx
+			irmovl 1,%edi
+			rmmovl %edi,0x00000009(%eax)
+			jmp ZEROWAIT
+	
+	ZEROEND:
+		irmovl 4,%edi
+		rmmovl %edi,0x00000009(%eax)
+		jmp GG
+
+ONE:
+	jmp ONEWAIT
+
+	ONEWAIT:
+		mrmovl 0x00000009(%eax),%edi
+		irmovl 0,%ebx
+		subl %edi,%ebx
+		je ONEWAIT
+		irmovl 1,%ebx
+		subl %edi,%ebx
+		je ONERECEIVE
+		irmovl 2,%ebx
+		subl %edi,%ebx
+		je ONESEND
+		irmovl 3,%ebx
+		subl %edi,%ebx
+		je ONEWAIT
+		jmp GG
+
+	ONERECEIVE:
+		itom 0x00000005(%eax),%ebx
+		mrmovl 0x0000000d(%eax),%edx
+		rrmovl %eax,%esi
+		iaddl 13,%esi
+		jmp ONERECEIVING
+
+		ONERECEIVING:
+			iaddl 4,%esi
+			mrmovl 0x00000000(%esi),%edi
+			rmmovl %edi,0x00000000(%eax)
+			itom 0x00000000(%eax),%ebx
+			iaddl -1,%edx
+			irmovl 0,%ebx
+			subl %edx,%ebx
+			je ONERECEIVEEND
+			jmp ONERECEIVING
+
+		ONERECEIVEEND:
+			itom 0x00000006(%eax),%ebx
+			irmovl 2,%edi
+			rmmovl %edi,0x00000009(%eax)
+			jmp ONEWAIT
+
+	ONESEND:
+		itom 0x00000004(%eax),%ebx
+		rmmovl %ecx,0x00000013(%eax)
+		rrmovl %ecx,%edx
+		rrmovl %eax,%esi
+		iaddl 13,%esi
+		iaddl -1,%ecx
+		jmp ONESENDING
+
+		ONESENDING:
+			iaddl 4,%esi
+			rmmovl %edx,0x00000000(%esi)
+			rmmovl %edx,0x00000000(%eax)
+			itom 0x00000000(%eax),%ebx
+			iaddl -1,%edx
+			irmovl 0,%ebx
+			subl %edx,%ebx
+			je ONESENDEND
+			jmp ONESENDING
+
+		ONESENDEND:
+			itom 0x00000006(%eax),%ebx
+			irmovl 3,%edi
+			rmmovl %edi,0x00000009(%eax)
+			jmp ONEWAIT
+		
+GG:
+	halt

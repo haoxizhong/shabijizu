@@ -125,12 +125,15 @@ bool_t set_byte_val(mem_t m, word_t pos, byte_t val);
 /* Set 4 bytes in memory */
 bool_t set_word_val(mem_t m, word_t pos, word_t val);
 
+int atom_memory(mem_t m,word_t pos);
+
 /* Print contents of memory */
 void dump_memory(FILE *outfile, mem_t m, word_t pos, int cnt);
 
 /********** Implementation of Register File *************/
 
 mem_t init_reg();
+mem_t init_reg_with_id(int id);
 void free_reg();
 
 /* Make a copy of a register file */

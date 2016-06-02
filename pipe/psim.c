@@ -43,6 +43,7 @@ FILE *object_file;       /* Input file handle */
 bool_t verbosity = 2;    /* Verbosity level [TTY only] (-v) */ 
 int instr_limit = 10000; /* Instruction limit [TTY only] (-l) */
 bool_t do_check = FALSE; /* Test with ISA simulator? [TTY only] (-t) */
+mem_t mem0, reg0;
 
 int id=0;
 int firstp=0;
@@ -90,7 +91,8 @@ int sim_main(int argc, char **argv)
 		id=atoi(argv[2]);
 		argc--;
 	}
-	if (id==1) firstp=1500;
+	if (id==1) firstp=700;
+//	printf("Hahaha %d\n",id);
 
 
 	/* Parse the command line arguments */
@@ -194,7 +196,6 @@ static void run_tty_sim()
 	byte_t run_status = STAT_AOK;
 	cc_t result_cc = 0;
 	int byte_cnt = 0;
-	mem_t mem0, reg0;
 	state_ptr isa_state = NULL;
 
 
@@ -210,8 +211,10 @@ static void run_tty_sim()
 	/* Emit simulator name */
 	if (verbosity >= 2)
 		printf("%s\n", simname);
+	printf("I am here 1\n");
 
 	byte_cnt = load_mem(mem, object_file, 1,firstp);
+	printf("I am here 2\n");
 	if (byte_cnt == 0) {
 		fprintf(stderr, "No lines of code found\n");
 		exit(1);
@@ -238,8 +241,8 @@ static void run_tty_sim()
 		printf("Condition Codes: %s\n", cc_name(result_cc));
 		printf("Changed Register State:\n");
 		diff_reg(reg0, reg, stdout);
-		printf("Changed Memory State:\n");
-		diff_mem(mem0, mem, stdout);
+		//printf("Changed Memory State:\n");
+		//diff_mem(mem0, mem, stdout);
 	}
 	if (do_check) {
 		byte_t e = STAT_AOK;
@@ -541,6 +544,7 @@ void sim_init()
 {
 	/* Create memory and register files */
 	initialized = 1;
+	printf("This is my id %d\n",id);
 	mem = init_mem_with_id(MEM_SIZE,id);
 	reg = init_reg();
 
@@ -614,25 +618,34 @@ static void update_state(bool_t update_mem, bool_t update_cc)
 	 */
 
 	if (wb_destE != REG_NONE) {
-		sim_log("\tWriteback: Wrote 0x%x to register %s\n",
-				wb_valE, reg_name(wb_destE));
+	//	sim_log("\tWriteback: Wrote 0x%x to register %s\n",
+	//			wb_valE, reg_name(wb_destE));
 		set_reg_val(reg, wb_destE, wb_valE);
 	}
 	if (wb_destM != REG_NONE) {
-		sim_log("\tWriteback: Wrote 0x%x to register %s\n",
-				wb_valM, reg_name(wb_destM));
+	//	sim_log("\tWriteback: Wrote 0x%x to register %s\n",
+	//			wb_valM, reg_name(wb_destM));
 		set_reg_val(reg, wb_destM, wb_valM);
 	}
 
 	/* Memory write */
+
+	if (mem_atom)
+	{
+		int res=atom_memory(mem,mem_addr);
+		set_reg_val(reg,mem_atom_dstE,res);
+		//printf("I'm %d, atom result %d\n",id,res);
+	}
+
+
 	if (mem_write && !update_mem) {
 		sim_log("\tDisabled write of 0x%x to address 0x%x\n", mem_data, mem_addr);
 	}
 	if (update_mem && mem_write) {
 		if (!set_word_val(mem, mem_addr, mem_data)) {
-			sim_log("\tCouldn't write to address 0x%x\n", mem_addr);
+//			sim_log("\tCouldn't write to address 0x%x\n", mem_addr);
 		} else {
-			sim_log("\tWrote 0x%x to address 0x%x\n", mem_data, mem_addr);
+//			sim_log("\tWrote 0x%x to address 0x%x\n", mem_data, mem_addr);
 
 #ifdef HAS_GUI
 			if (gui_mode) {
@@ -660,7 +673,9 @@ static void update_state(bool_t update_mem, bool_t update_cc)
 
 /* Text representation of status */
 void tty_report(int cyc) {
-	sim_log("\nCycle %d. CC=%s, Stat=%s\n", cyc, cc_name(cc), stat_name(status));
+	//printf("Cycle %d:\n",cyc);
+	//diff_reg(reg0,reg,stdout);
+	/*sim_log("\nCycle %d. CC=%s, Stat=%s\n", cyc, cc_name(cc), stat_name(status));
 
 	sim_log("F: predPC = 0x%x\n", pc_curr->pc);
 
@@ -688,7 +703,7 @@ void tty_report(int cyc) {
 			iname(HPACK(mem_wb_curr->icode, mem_wb_curr->ifun)),
 			mem_wb_curr->vale, mem_wb_curr->valm,
 			reg_name(mem_wb_curr->deste), reg_name(mem_wb_curr->destm),
-			stat_name(mem_wb_curr->status));
+			stat_name(mem_wb_curr->status));*/
 }
 
 /* Run pipeline for one cycle */
@@ -1416,19 +1431,19 @@ void do_if_stage()
 	if_id_next->icode = gen_f_icode();
 	if_id_next->ifun  = gen_f_ifun();
 	if (!imem_error) {
-		sim_log("\tFetch: f_pc = 0x%x, imem_instr = %s, f_instr = %s\n",
-				f_pc, iname(instr),
-				iname(HPACK(if_id_next->icode, if_id_next->ifun)));
+		//sim_log("\tFetch: f_pc = 0x%x, imem_instr = %s, f_instr = %s\n",
+//				f_pc, iname(instr),
+//				iname(HPACK(if_id_next->icode, if_id_next->ifun)));
 	}
 
 	instr_valid = gen_instr_valid();
-	if (!instr_valid) 
-		sim_log("\tFetch: Instruction code 0x%x invalid\n", instr);
+	//if (!instr_valid) 
+//		sim_log("\tFetch: Instruction code 0x%x invalid\n", instr);
 	if_id_next->status = gen_f_stat();
 
 	valp++;
 	if (gen_need_regids()) {
-		get_byte_val(mem, valp, &regids);
+		get_byte_val(mem, valp+firstp, &regids);
 		valp ++;
 	}
 	if_id_next->ra = HI4(regids);
@@ -1512,21 +1527,21 @@ void do_ex_stage()
 
 	ex_mem_next->takebranch = e_bcond;
 
-	if (id_ex_curr->icode == I_JMP)
-		sim_log("\tExecute: instr = %s, cc = %s, branch %staken\n",
-				iname(HPACK(id_ex_curr->icode, id_ex_curr->ifun)),
-				cc_name(cc),
-				ex_mem_next->takebranch ? "" : "not ");
+//	if (id_ex_curr->icode == I_JMP)
+//		sim_log("\tExecute: instr = %s, cc = %s, branch %staken\n",
+//				iname(HPACK(id_ex_curr->icode, id_ex_curr->ifun)),
+//				cc_name(cc),
+//				ex_mem_next->takebranch ? "" : "not ");
 
 	/* Perform the ALU operation */
 	word_t aluout = compute_alu(alufun, alua, alub);
 	ex_mem_next->vale = aluout;
-	sim_log("\tExecute: ALU: %c 0x%x 0x%x --> 0x%x\n",
-			op_name(alufun), alua, alub, aluout);
+//	sim_log("\tExecute: ALU: %c 0x%x 0x%x --> 0x%x\n",
+//			op_name(alufun), alua, alub, aluout);
 
 	if (setcc) {
 		cc_in = compute_cc(alufun, alua, alub);
-		sim_log("\tExecute: New cc = %s\n", cc_name(cc_in));
+//		sim_log("\tExecute: New cc = %s\n", cc_name(cc_in));
 	}
 
 	ex_mem_next->icode = id_ex_curr->icode;
@@ -1554,14 +1569,17 @@ void do_mem_stage()
 	mem_addr = gen_mem_addr();
 	mem_data = ex_mem_curr->vala;
 	mem_write = gen_mem_write();
+	mem_atom=gen_mem_tom();
 	dmem_error = FALSE;
 
 	if (read) {
 		dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);
-		if (!dmem_error)
-			sim_log("\tMemory: Read 0x%x from 0x%x\n",
-					valm, mem_addr);
+	//	if (!dmem_error)
+	//		sim_log("\tMemory: Read 0x%x from 0x%x\n",
+	//				valm, mem_addr);
 	}
+	//printf("What's wrong %d\n",mem_atom);
+	if (mem_atom) mem_atom_dstE=ex_mem_curr->destm;
 	if (mem_write) {
 		word_t sink;
 		/* Do a read of address just to check validity */

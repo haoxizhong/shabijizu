@@ -213,7 +213,7 @@ static void run_tty_sim()
     /* Emit simulator name */
     printf("%s\n", simname);
 
-    byte_cnt = load_mem(mem, object_file, 1);
+    byte_cnt = load_mem(mem, object_file, 1,0);
     if (byte_cnt == 0) {
 	fprintf(stderr, "No lines of code found\n");
 	exit(1);
@@ -906,7 +906,7 @@ int simLoadCodeCmd(ClientData clientData, Tcl_Interp *interp,
 	return TCL_ERROR;
     }
     sim_reset();
-    code_count = load_mem(mem, object_file, 0);
+    code_count = load_mem(mem, object_file, 0,0);
     post_load_mem = copy_mem(mem);
     sprintf(tcl_msg, "%d", code_count);
     interp->result = tcl_msg;

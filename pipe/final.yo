@@ -1,0 +1,158 @@
+  0x000:              | .pos 0
+  0x000: 30f040060000 | irmovl 0x00000640,%eax
+  0x006: 30f300000000 | irmovl 0,%ebx
+  0x00c: 30f10a000000 | irmovl 10,%ecx
+  0x012: 30f200000000 | irmovl 0,%edx
+  0x018: f03008000000 | itom 0x00000008(%eax),%ebx
+  0x01e: 6033         | addl %ebx,%ebx
+  0x020: 732a000000   | je ZERO
+  0x025: 7054010000   | jmp ONE
+                      | 
+  0x02a:              | ZERO:
+  0x02a: 702f000000   | 	jmp ZEROWAIT
+                      | 
+  0x02f:              | 	ZEROWAIT:
+  0x02f: 507009000000 | 		mrmovl 0x00000009(%eax),%edi
+  0x035: 30f300000000 | 		irmovl 0,%ebx
+  0x03b: 6173         | 		subl %edi,%ebx
+  0x03d: 73ce000000   | 		je ZEROSEND
+  0x042: 30f301000000 | 		irmovl 1,%ebx
+  0x048: 6173         | 		subl %edi,%ebx
+  0x04a: 732f000000   | 		je ZEROWAIT
+  0x04f: 30f302000000 | 		irmovl 2,%ebx
+  0x055: 6173         | 		subl %edi,%ebx
+  0x057: 732f000000   | 		je ZEROWAIT
+  0x05c: 30f303000000 | 		irmovl 3,%ebx
+  0x062: 6173         | 		subl %edi,%ebx
+  0x064: 736e000000   | 		je ZERORECEIVE
+  0x069: 7060020000   | 		jmp GG
+                      | 
+  0x06e:              | 	ZERORECEIVE:
+  0x06e: f03005000000 | 		itom 0x00000005(%eax),%ebx
+  0x074: 50200d000000 | 		mrmovl 0x0000000d(%eax),%edx
+  0x07a: 2006         | 		rrmovl %eax,%esi
+  0x07c: c0f60d000000 | 		iaddl 13,%esi
+  0x082: 7087000000   | 		jmp ZERORECEIVING
+                      | 
+  0x087:              | 		ZERORECEIVING:
+  0x087: c0f604000000 | 			iaddl 4,%esi
+  0x08d: 507600000000 | 			mrmovl 0x00000000(%esi),%edi
+  0x093: 407000000000 | 			rmmovl %edi,0x00000000(%eax)
+  0x099: f03000000000 | 			itom 0x00000000(%eax),%ebx
+  0x09f: c0f2ffffffff | 			iaddl -1,%edx
+  0x0a5: 30f300000000 | 			irmovl 0,%ebx
+  0x0ab: 6123         | 			subl %edx,%ebx
+  0x0ad: 73b7000000   | 			je ZERORECEIVEEND
+  0x0b2: 7087000000   | 			jmp ZERORECEIVING
+                      | 
+  0x0b7:              | 		ZERORECEIVEEND:
+  0x0b7: f03006000000 | 			itom 0x00000006(%eax),%ebx
+  0x0bd: 30f700000000 | 			irmovl 0,%edi
+  0x0c3: 407009000000 | 			rmmovl %edi,0x00000009(%eax)
+  0x0c9: 702f000000   | 			jmp ZEROWAIT
+                      | 
+  0x0ce:              | 	ZEROSEND:
+  0x0ce: 30f300000000 | 		irmovl 0,%ebx
+  0x0d4: 6113         | 		subl %ecx,%ebx
+  0x0d6: 7343010000   | 		je ZEROEND
+  0x0db: f03004000000 | 		itom 0x00000004(%eax),%ebx
+  0x0e1: 2012         | 		rrmovl %ecx,%edx
+  0x0e3: 40100d000000 | 		rmmovl %ecx,0x0000000d(%eax)
+  0x0e9: 2006         | 		rrmovl %eax,%esi
+  0x0eb: c0f60d000000 | 		iaddl 13,%esi
+  0x0f1: c0f1ffffffff | 		iaddl -1,%ecx
+  0x0f7: 70fc000000   | 		jmp ZEROSENDING
+                      | 
+  0x0fc:              | 		ZEROSENDING:
+  0x0fc: c0f604000000 | 			iaddl 4,%esi
+  0x102: 402600000000 | 			rmmovl %edx,0x00000000(%esi)
+  0x108: 402000000000 | 			rmmovl %edx,0x00000000(%eax)
+  0x10e: f03000000000 | 			itom 0x00000000(%eax),%ebx
+  0x114: c0f2ffffffff | 			iaddl -1,%edx
+  0x11a: 30f300000000 | 			irmovl 0,%ebx
+  0x120: 6123         | 			subl %edx,%ebx
+  0x122: 732c010000   | 			je ZEROSENDEND
+  0x127: 70fc000000   | 			jmp ZEROSENDING
+                      | 
+  0x12c:              | 		ZEROSENDEND:
+  0x12c: f03006000000 | 			itom 0x00000006(%eax),%ebx
+  0x132: 30f701000000 | 			irmovl 1,%edi
+  0x138: 407009000000 | 			rmmovl %edi,0x00000009(%eax)
+  0x13e: 702f000000   | 			jmp ZEROWAIT
+                      | 	
+  0x143:              | 	ZEROEND:
+  0x143: 30f704000000 | 		irmovl 4,%edi
+  0x149: 407009000000 | 		rmmovl %edi,0x00000009(%eax)
+  0x14f: 7060020000   | 		jmp GG
+                      | 
+  0x154:              | ONE:
+  0x154: 7059010000   | 	jmp ONEWAIT
+                      | 
+  0x159:              | 	ONEWAIT:
+  0x159: 507009000000 | 		mrmovl 0x00000009(%eax),%edi
+  0x15f: 30f300000000 | 		irmovl 0,%ebx
+  0x165: 6173         | 		subl %edi,%ebx
+  0x167: 7359010000   | 		je ONEWAIT
+  0x16c: 30f301000000 | 		irmovl 1,%ebx
+  0x172: 6173         | 		subl %edi,%ebx
+  0x174: 7398010000   | 		je ONERECEIVE
+  0x179: 30f302000000 | 		irmovl 2,%ebx
+  0x17f: 6173         | 		subl %edi,%ebx
+  0x181: 73f8010000   | 		je ONESEND
+  0x186: 30f303000000 | 		irmovl 3,%ebx
+  0x18c: 6173         | 		subl %edi,%ebx
+  0x18e: 7359010000   | 		je ONEWAIT
+  0x193: 7060020000   | 		jmp GG
+                      | 
+  0x198:              | 	ONERECEIVE:
+  0x198: f03005000000 | 		itom 0x00000005(%eax),%ebx
+  0x19e: 50200d000000 | 		mrmovl 0x0000000d(%eax),%edx
+  0x1a4: 2006         | 		rrmovl %eax,%esi
+  0x1a6: c0f60d000000 | 		iaddl 13,%esi
+  0x1ac: 70b1010000   | 		jmp ONERECEIVING
+                      | 
+  0x1b1:              | 		ONERECEIVING:
+  0x1b1: c0f604000000 | 			iaddl 4,%esi
+  0x1b7: 507600000000 | 			mrmovl 0x00000000(%esi),%edi
+  0x1bd: 407000000000 | 			rmmovl %edi,0x00000000(%eax)
+  0x1c3: f03000000000 | 			itom 0x00000000(%eax),%ebx
+  0x1c9: c0f2ffffffff | 			iaddl -1,%edx
+  0x1cf: 30f300000000 | 			irmovl 0,%ebx
+  0x1d5: 6123         | 			subl %edx,%ebx
+  0x1d7: 73e1010000   | 			je ONERECEIVEEND
+  0x1dc: 70b1010000   | 			jmp ONERECEIVING
+                      | 
+  0x1e1:              | 		ONERECEIVEEND:
+  0x1e1: f03006000000 | 			itom 0x00000006(%eax),%ebx
+  0x1e7: 30f702000000 | 			irmovl 2,%edi
+  0x1ed: 407009000000 | 			rmmovl %edi,0x00000009(%eax)
+  0x1f3: 7059010000   | 			jmp ONEWAIT
+                      | 
+  0x1f8:              | 	ONESEND:
+  0x1f8: f03004000000 | 		itom 0x00000004(%eax),%ebx
+  0x1fe: 401013000000 | 		rmmovl %ecx,0x00000013(%eax)
+  0x204: 2012         | 		rrmovl %ecx,%edx
+  0x206: 2006         | 		rrmovl %eax,%esi
+  0x208: c0f60d000000 | 		iaddl 13,%esi
+  0x20e: c0f1ffffffff | 		iaddl -1,%ecx
+  0x214: 7019020000   | 		jmp ONESENDING
+                      | 
+  0x219:              | 		ONESENDING:
+  0x219: c0f604000000 | 			iaddl 4,%esi
+  0x21f: 402600000000 | 			rmmovl %edx,0x00000000(%esi)
+  0x225: 402000000000 | 			rmmovl %edx,0x00000000(%eax)
+  0x22b: f03000000000 | 			itom 0x00000000(%eax),%ebx
+  0x231: c0f2ffffffff | 			iaddl -1,%edx
+  0x237: 30f300000000 | 			irmovl 0,%ebx
+  0x23d: 6123         | 			subl %edx,%ebx
+  0x23f: 7349020000   | 			je ONESENDEND
+  0x244: 7019020000   | 			jmp ONESENDING
+                      | 
+  0x249:              | 		ONESENDEND:
+  0x249: f03006000000 | 			itom 0x00000006(%eax),%ebx
+  0x24f: 30f703000000 | 			irmovl 3,%edi
+  0x255: 407009000000 | 			rmmovl %edi,0x00000009(%eax)
+  0x25b: 7059010000   | 			jmp ONEWAIT
+                      | 		
+  0x260:              | GG:
+  0x260: 00           | 	halt
