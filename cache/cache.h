@@ -285,9 +285,9 @@ void msg_write(int *msg,int p,int v)
 	msg[2]=v;
 	msg[0]=2;
 	while (msg[0])
-	{
-		freopen("out","w",stderr);
-		fprintf(stderr,"%d\n",msg[0]);
+	{;
+		//freopen("out","w",stderr);
+		//fprintf(stderr,"%d\n",msg[0]);
 	}
 	//if (p>=1600) printf("msg_write is done\n");
 }
@@ -298,9 +298,9 @@ int msg_read(int *msg,int p)
 	msg[1]=p;
 	msg[0]=1;
 	while (msg[0])
-	{
-		freopen("out","w",stderr);
-		fprintf(stderr,"%d\n",msg[0]);
+	{;
+		//freopen("out","w",stderr);
+		//fprintf(stderr,"%d\n",msg[0]);
 	}
 	//if (p>=1600) printf("msg_read is done %d\n",msg[2]);
 	return msg[2];
@@ -311,9 +311,9 @@ int msg_atom(int *msg,int p)
 	msg[1]=p;
 	msg[0]=3;
 	while (msg[0])
-	{
-		freopen("out","w",stderr);
-		fprintf(stderr,"%d\n",msg[0]);
+	{;
+		//freopen("out","w",stderr);
+		//fprintf(stderr,"%d\n",msg[0]);
 	}
 	int base=1600;
 	p-=base;
@@ -331,9 +331,9 @@ int msg_atom(int *msg,int p)
 			msg[1]=p+a+base;
 			msg[0]=1;
 			while (msg[0])
-			{
-				freopen("out","w",stderr);
-				fprintf(stderr,"%d\n",msg[0]);
+			{;
+				//freopen("out","w",stderr);
+				//fprintf(stderr,"%d\n",msg[0]);
 			}
 			ans[a]=msg[2];
 		}
